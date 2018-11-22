@@ -1,22 +1,62 @@
 {
-  "name"    : "code-the-microbit",
-  "version" : "1.0.0",
-  "description": "Blocks / Javascript editor",
-  "author": "Microsoft",
-  "main"    : "main.js",
+  "name": "pxt-microbit",
+  "version": "1.2.11",
+  "description": "micro:bit target for Microsoft MakeCode (PXT)",
   "scripts": {
-      "start": "node_modules/.bin/electron ."
+    "build": "npm run clean && webpack --progress --colors --bail",
+    "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
+    "deploy": "touch build/.nojekyll && gh-pages -t -d build -m \"Build for $(git log --pretty=format:%H -n1)\"",
+    "prune": "./prune-gh-pages.sh",
+    "i18n:src": "babel src > tmp.js && rimraf tmp.js && build-i18n-src ./translations/messages/src ./translations/",
+    "start": "webpack-dev-server",
+    "test": "npm run test:lint && npm run test:unit && npm run build && npm run test:integration",
+    "test:integration": "jest --runInBand test[\\\\/]integration",
+    "test:lint": "eslint . --ext .js,.jsx",
+    "test:unit": "jest test[\\\\/]unit",
+    "test:smoke": "jest --runInBand test[\\\\/]smoke",
+    "watch": "webpack --progress --colors --watch"
   },
- "dependencies": {
-    "electron": "^2.0.0",
-    "connect": "^3.6.6",
-    "serve-static": "^1.12.3",
-    "open": "^0.0.5",
-    "openport": "^0.0.5"
+  "keywords": [
+    "JavaScript",
+    "education",
+    "microbit"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Microsoft/pxt-microbit.git"
   },
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/Microsoft/pxt-microbit#readme",
+  "files": [
+    "README.md",
+    "pxtarget.json",
+    "targetconfig.json",
+    "built/*.js",
+    "built/*.json",
+    "built/*.d.ts",
+    "built/hexcache",
+    "built/web",
+    "sim/public",
+    "docs/*.md",
+    "docs/*/*.md",
+    "docs/*/*/*.md",
+    "docs/static/*.svg",
+    "docs/static/*.png",
+    "docs/static/icons/favicon.ico"
+  ],
   "devDependencies": {
-      "electron": "*",
-      "pxt-microbit": "*"
-      "electron-packager": "12.0.0"
+    "typescript": "2.6.1",
+    "less": "2.7.3",
+    "semantic-ui-less": "2.2.14",
+    "@types/bluebird": "2.0.33",
+    "@types/jquery": "3.2.16",
+    "@types/marked": "0.3.0",
+    "@types/node": "8.0.53",
+    "@types/web-bluetooth": "0.0.4"
+  },
+  "dependencies": {
+    "pxt-common-packages": "0.25.10",
+    "pxt-core": "4.4.7"
   }
 }
