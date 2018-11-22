@@ -1,39 +1,79 @@
-const {app, BrowserWindow, Menu} = require('electron')
-const pxt = require('pxt-core')
+const electron = require('electron')
+// Module to control application life.
+const app = electron.app
+// Module to create native browser window.
+const BrowserWindow = electron.BrowserWindow
+const runServer = require('./server.js')
 const path = require('path')
+const url = require('url')
 
-let win
+const open = require('open')
 
-const cliPath = path.join(process.cwd(), "node_modules/pxt-microbit") 
-
-function startServerAndCreateWindow() {
-  pxt.mainCli(cliPath, ["serve", "-no-browser"])
-  createWindow()
-}
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
 
 function createWindow () {
-  win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    title: "code the micro:bit"
+  // Create the browser window.
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    minWidth: 1200,
+    minHeight: 800,
+    title: "Microbit 3.0 GUI"
   })
-  Menu.setApplicationMenu(null)
-  win.loadURL(`file://${__dirname}/index.html#local_token=${pxt.globalConfig.localToken}`)
-  win.on('closed', () => {
-    win = null
+
+  runServer(function (port) {
+    // and load the index.html of the app.
+    mainWindow.loadURL(url.format({
+      pathname: "localhost:" + port,
+      protocol: 'http:',
+      slashes: true
+    }))
+  });
+  mainWindow.setMenu(null);
+
+  // Emitted when the window is closed.
+  mainWindow.on('closed', function () {
+    // Dereference the window object, usually you would store windows
+    // in an array if your app supports multi windows, this is the time
+    // when you should delete the corresponding element.
+    mainWindow = null
   })
+  
+  var handleRedirect = function (e, url) {
+    if (url != mainWindow.webContents.getURL()) {
+      e.preventDefault()
+      open(url)
+    }
+  }
+
+  mainWindow.webContents.on('will-navigate', handleRedirect)
+  mainWindow.webContents.on('new-window', handleRedirect)
 }
 
-app.on('ready', startServerAndCreateWindow)
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow)
 
-app.on('window-all-closed', () => {
+// Quit when all windows are closed.
+app.on('window-all-closed', function () {
+  // On OS X it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-app.on('activate', () => {
-  if (win === null) {
+app.on('activate', function () {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (mainWindow === null) {
     createWindow()
   }
+})
+
+process.on('uncaughtException', function (e) {
+  console.log(e.Error)
 })
